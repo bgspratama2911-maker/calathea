@@ -6,7 +6,7 @@
     <title>@yield('title', 'Rekap Keuangan & Reject Calathea')</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('images/logo-calathea.png') }}">
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logocala.jpeg') }}?v={{ time() }}">
 
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -145,7 +145,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-3 shadow-sm mb-4">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center fw-bold text-white fs-4 me-3" href="{{ route('sales.index') }}">
-                <img src="{{ asset('images/logo-calathea.png') }}" alt="Logo Calathea Coffee" class="me-2 rounded-circle border border-success" style="height: 40px; width: 40px; object-fit: cover;">
+                <img src="{{ asset('images/logocala.jpeg') }}?v={{ time() }}" alt="Logo Calathea Coffee" class="me-2 rounded-circle border border-success" style="height: 40px; width: 40px; object-fit: cover;">
                 <span>Calathea Coffee</span>
             </a>
 

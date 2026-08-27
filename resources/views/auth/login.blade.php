@@ -6,7 +6,7 @@
     <title>Login Panel - Rekap Pengeluaran Calathea</title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('images/logo-calathea.png') }}">
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logocala.jpeg') }}?v={{ time() }}">
 
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -93,7 +93,7 @@
     <!-- Header -->
     <div class="login-header">
         <div class="icon-box">
-            <img src="{{ asset('images/logo-calathea.png') }}" alt="Logo Calathea Coffee" style="width: 100%; height: 100%; object-fit: cover;">
+            <img src="{{ asset('images/logocala.jpeg') }}?v={{ time() }}" alt="Logo Calathea Coffee" style="width: 100%; height: 100%; object-fit: cover;">
         </div>
         <h4 class="fw-bold mb-1">Rekap Pengeluaran Calathea</h4>
         <p class="text-light opacity-75 small mb-0">Silakan login untuk mengelola pengeluaran</p>

@@ -1327,7 +1327,7 @@ $(document).ready(function() {
         const receiptHtml = `
             <div class="receipt-container">
                 <div class="receipt-header">
-                    <img src="{{ asset('images/logocala.jpeg') }}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-bottom: 5px;" alt="Logo">
+                    <img src="{{ asset('images/logocala.jpeg') }}?v={{ time() }}" style="max-height: 50px; width: auto; max-width: 140px; object-fit: contain; margin-bottom: 6px;" alt="Logo">
                     <h5>CALATHEA COFFEE</h5>
                     <div>Jl. Dr. Satrio No. 235 Jakarta Selatan</div>
                 </div>

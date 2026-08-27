@@ -150,17 +150,10 @@
             </div>
 
             <!-- Submit Button -->
-            <button type="submit" class="btn btn-navy w-100 mb-3">
+            <button type="submit" class="btn btn-navy w-100">
                 <i class="fa-solid fa-right-to-bracket me-2"></i>Masuk ke Panel
             </button>
         </form>
-
-        <!-- Default Credentials Info Box -->
-        <div class="demo-box mt-3 text-center text-muted">
-            <span class="fw-bold d-block text-dark mb-1"><i class="fa-solid fa-key me-1 text-warning"></i> Akun Admin Default:</span>
-            Email: <code>admin@example.com</code> <br>
-            Password: <code>password123</code>
-        </div>
     </div>
 </div>
 

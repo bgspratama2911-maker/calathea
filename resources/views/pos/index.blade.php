@@ -733,15 +733,45 @@
         <!-- Right Side: Order Cart Panel -->
         <div class="cart-section">
             
-            <!-- Cart Header -->
-            <div class="cart-header">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="order-id-badge">Order #{{ $nextOrderNum }}</span>
-                    <i class="fa-solid fa-user text-secondary fs-6"></i>
+            <!-- Cart Header with Customer & Order Type Selector -->
+            <div class="cart-header" style="height: auto; flex-direction: column; align-items: stretch; gap: 6px; padding: 8px 10px;">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="order-id-badge">Order #{{ $nextOrderNum }}</span>
+                        <i class="fa-solid fa-user text-secondary" style="font-size: 0.75rem;"></i>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="small text-muted" style="font-size: 0.75rem;">Pelanggan:</span>
+                        <input type="text" id="customerNameInput" class="customer-input" value="Pelanggan" placeholder="Nama..." autocomplete="off">
+                    </div>
                 </div>
-                <div class="d-flex align-items-center gap-1">
-                    <span class="small text-muted">Pelanggan:</span>
-                    <input type="text" id="customerNameInput" class="customer-input" value="John Bonham" placeholder="Nama..." autocomplete="off">
+
+                <!-- Tipe Penjualan Bar (Dine In / Take Away / Online Delivery) -->
+                <div class="d-flex gap-1 overflow-x-auto py-1" id="orderTypeBar" style="scrollbar-width: none;">
+                    <input type="radio" class="btn-check" name="cart_order_type" id="ot_dine_in" value="DINE IN" checked autocomplete="off">
+                    <label class="btn btn-outline-primary btn-sm py-1 px-2 fw-bold text-nowrap" style="font-size: 0.68rem; border-radius: 6px;" for="ot_dine_in">
+                        <i class="fa-solid fa-utensils me-1"></i> DINE IN
+                    </label>
+
+                    <input type="radio" class="btn-check" name="cart_order_type" id="ot_take_away" value="TAKE AWAY" autocomplete="off">
+                    <label class="btn btn-outline-primary btn-sm py-1 px-2 fw-bold text-nowrap" style="font-size: 0.68rem; border-radius: 6px;" for="ot_take_away">
+                        <i class="fa-solid fa-bag-shopping me-1"></i> TAKE AWAY
+                    </label>
+
+                    <input type="radio" class="btn-check" name="cart_order_type" id="ot_gofood" value="GO FOOD" autocomplete="off">
+                    <label class="btn btn-outline-danger btn-sm py-1 px-2 fw-bold text-nowrap" style="font-size: 0.68rem; border-radius: 6px;" for="ot_gofood">
+                        <i class="fa-solid fa-motorcycle me-1"></i> GO FOOD
+                    </label>
+
+                    <input type="radio" class="btn-check" name="cart_order_type" id="ot_grabfood" value="GRAB FOOD" autocomplete="off">
+                    <label class="btn btn-outline-success btn-sm py-1 px-2 fw-bold text-nowrap" style="font-size: 0.68rem; border-radius: 6px;" for="ot_grabfood">
+                        <i class="fa-solid fa-motorcycle me-1"></i> GRAB FOOD
+                    </label>
+
+                    <input type="radio" class="btn-check" name="cart_order_type" id="ot_shopeefood" value="SHOPEE FOOD" autocomplete="off">
+                    <label class="btn btn-outline-warning btn-sm py-1 px-2 fw-bold text-nowrap" style="font-size: 0.68rem; border-radius: 6px;" for="ot_shopeefood">
+                        <i class="fa-solid fa-store me-1"></i> SHOPEE FOOD
+                    </label>
                 </div>
             </div>
 
@@ -793,9 +823,12 @@
                 <div class="row g-4">
                     <!-- Left Order Summary -->
                     <div class="col-md-6 border-end">
-                        <h6 class="fw-bold text-uppercase text-secondary mb-3" style="font-size: 0.8rem;">
-                            <i class="fa-solid fa-list-check me-1"></i> Ringkasan Order
-                        </h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-uppercase text-secondary mb-0" style="font-size: 0.8rem;">
+                                <i class="fa-solid fa-list-check me-1"></i> Ringkasan Order
+                            </h6>
+                            <span class="badge bg-primary-subtle text-primary fw-bold" id="modalOrderTypeBadge">DINE IN</span>
+                        </div>
                         <div class="bg-light p-3 rounded mb-3" style="max-height: 220px; overflow-y: auto;" id="modalOrderSummary">
                             <!-- Items inserted dynamically -->
                         </div>
@@ -809,7 +842,34 @@
                     <div class="col-md-6">
                         <form id="posCheckoutForm">
                             @csrf
-                            <h6 class="fw-bold text-uppercase text-secondary mb-3" style="font-size: 0.8rem;">
+                            <!-- Pilihan Tipe Penjualan dalam Modal -->
+                            <h6 class="fw-bold text-uppercase text-secondary mb-2" style="font-size: 0.8rem;">
+                                <i class="fa-solid fa-tag me-1"></i> Tipe Penjualan / Layanan
+                            </h6>
+                            <div class="row g-1 mb-3">
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check modal-order-type" name="modal_order_type" id="mot_dine_in" value="DINE IN" checked>
+                                    <label class="btn btn-outline-primary w-100 py-1 fw-bold" style="font-size: 0.72rem;" for="mot_dine_in">DINE IN</label>
+                                </div>
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check modal-order-type" name="modal_order_type" id="mot_take_away" value="TAKE AWAY">
+                                    <label class="btn btn-outline-primary w-100 py-1 fw-bold" style="font-size: 0.72rem;" for="mot_take_away">TAKE AWAY</label>
+                                </div>
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check modal-order-type" name="modal_order_type" id="mot_gofood" value="GO FOOD">
+                                    <label class="btn btn-outline-danger w-100 py-1 fw-bold" style="font-size: 0.72rem;" for="mot_gofood">GO FOOD</label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="radio" class="btn-check modal-order-type" name="modal_order_type" id="mot_grabfood" value="GRAB FOOD">
+                                    <label class="btn btn-outline-success w-100 py-1 fw-bold" style="font-size: 0.72rem;" for="mot_grabfood">GRAB FOOD</label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="radio" class="btn-check modal-order-type" name="modal_order_type" id="mot_shopeefood" value="SHOPEE FOOD">
+                                    <label class="btn btn-outline-warning w-100 py-1 fw-bold" style="font-size: 0.72rem;" for="mot_shopeefood">SHOPEE FOOD</label>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold text-uppercase text-secondary mb-2" style="font-size: 0.8rem;">
                                 <i class="fa-solid fa-credit-card me-1"></i> Metode Pembayaran
                             </h6>
 
@@ -1075,9 +1135,26 @@ $(document).ready(function() {
         $('#btnPayModal').prop('disabled', false);
     }
 
+    // Sync Order Type between Cart header and Modal
+    $('input[name="cart_order_type"]').on('change', function() {
+        const selectedType = $(this).val();
+        $(`input[name="modal_order_type"][value="${selectedType}"]`).prop('checked', true);
+        $('#modalOrderTypeBadge').text(selectedType);
+    });
+
+    $('input[name="modal_order_type"]').on('change', function() {
+        const selectedType = $(this).val();
+        $(`input[name="cart_order_type"][value="${selectedType}"]`).prop('checked', true);
+        $('#modalOrderTypeBadge').text(selectedType);
+    });
+
     // 6. Open Pay Modal
     $('#btnPayModal').on('click', function() {
         if (cart.length === 0) return;
+
+        const currentOrderType = $('input[name="cart_order_type"]:checked').val() || 'DINE IN';
+        $(`input[name="modal_order_type"][value="${currentOrderType}"]`).prop('checked', true);
+        $('#modalOrderTypeBadge').text(currentOrderType);
 
         let grandTotal = 0;
         let summaryHtml = '<ul class="list-group list-group-flush">';
@@ -1150,12 +1227,14 @@ $(document).ready(function() {
     $('#posCheckoutForm').on('submit', function(e) {
         e.preventDefault();
 
-        const customerName = $('#customerNameInput').val() || 'John Bonham';
+        const customerName = $('#customerNameInput').val() || 'Pelanggan';
+        const orderType = $('input[name="modal_order_type"]:checked').val() || $('input[name="cart_order_type"]:checked').val() || 'DINE IN';
         const paymentMethod = $('input[name="payment_method"]:checked').val();
         const cashPaid = parseFloat($('#cashPaidInput').val()) || 0;
 
         const payload = {
             _token: '{{ csrf_token() }}',
+            order_type: orderType,
             customer_name: customerName,
             payment_method: paymentMethod,
             items: cart.map(i => ({
@@ -1184,6 +1263,7 @@ $(document).ready(function() {
                     // Store transaction details for receipt printing
                     lastCompletedTransaction = {
                         orderNum: '{{ $nextOrderNum }}',
+                        orderType: orderType,
                         customerName: customerName,
                         paymentMethod: paymentMethod,
                         cashPaid: cashPaid,
@@ -1259,16 +1339,16 @@ $(document).ready(function() {
                     <span>#${tx.orderNum}</span>
                 </div>
                 <div class="receipt-row">
-                    <span>Tgl:</span>
+                    <span>Layanan:</span>
+                    <span style="font-weight: bold; color: #00796b;">[${tx.orderType || 'DINE IN'}]</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Waktu:</span>
                     <span>${tx.dateStr}</span>
                 </div>
                 <div class="receipt-row">
-                    <span>Kasir:</span>
-                    <span>{{ Auth::user()->name }}</span>
-                </div>
-                <div class="receipt-row">
-                    <span>Pelanggan:</span>
-                    <span>${tx.customerName}</span>
+                    <span>Kasir / Pelanggan:</span>
+                    <span>{{ Auth::user()->name }} / ${tx.customerName}</span>
                 </div>
 
                 <div class="receipt-divider"></div>

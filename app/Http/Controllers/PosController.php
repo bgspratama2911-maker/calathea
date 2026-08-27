@@ -71,7 +71,7 @@ class PosController extends Controller
                 'price' => (float) $stk->unit_price,
                 'discount' => 0,
                 'discount_amount' => 0,
-                'badge' => $stk->current_stock > 0 ? ($stk->current_stock . ' ' . $stk->unit) : 'Habis',
+                'badge' => $stk->category,
                 'current_stock' => $stk->current_stock,
                 'unit' => $stk->unit,
                 'image' => $img,
@@ -102,6 +102,7 @@ class PosController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'order_type' => 'nullable|string|in:DINE IN,TAKE AWAY,GO FOOD,GRAB FOOD,SHOPEE FOOD',
             'payment_method' => 'required|string',
             'customer_name' => 'nullable|string|max:100',
             'items' => 'required|array|min:1',
@@ -114,7 +115,8 @@ class PosController extends Controller
         ]);
 
         $todayDate = Carbon::today()->format('Y-m-d');
-        $customerName = !empty($validated['customer_name']) ? trim($validated['customer_name']) : 'John Bonham';
+        $orderType = !empty($validated['order_type']) ? $validated['order_type'] : 'DINE IN';
+        $customerName = !empty($validated['customer_name']) ? trim($validated['customer_name']) : 'Pelanggan';
         $paymentMethod = $validated['payment_method'];
 
         DB::beginTransaction();
@@ -131,8 +133,9 @@ class PosController extends Controller
                 $itemTotal = max(0, ($unitPrice * $qty) - $discount);
                 $grandTotal += $itemTotal;
 
-                // Make notes descriptive
+                // Make notes descriptive with Order Type and Customer
                 $notesArr = [];
+                $notesArr[] = "[{$orderType}]";
                 $notesArr[] = "Pelanggan: {$customerName}";
                 if ($discount > 0) {
                     $notesArr[] = "Diskon: Rp " . number_format($discount, 0, ',', '.');
@@ -168,6 +171,7 @@ class PosController extends Controller
                 'grand_total' => $grandTotal,
                 'items_count' => count($createdSales),
                 'order_date' => Carbon::now()->translatedFormat('d F Y H:i:s'),
+                'order_type' => $orderType,
                 'customer_name' => $customerName,
                 'payment_method' => $paymentMethod
             ]);

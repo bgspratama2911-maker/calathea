@@ -229,13 +229,16 @@
     <div class="meta-info">
         <table>
             <tr>
-                <td width="33%">
-                    <strong>Kata Kunci:</strong> {{ $search ? $search : 'Semua Produk' }}
+                <td width="25%">
+                    <strong>Kata Kunci:</strong> {{ $search ? $search : 'Semua' }}
                 </td>
-                <td width="33%">
+                <td width="25%">
+                    <strong>Tipe Stok:</strong> {{ $type == 'pos_menu' ? 'Menu POS' : ($type == 'raw_material' ? 'Bahan Baku' : 'Semua Tipe') }}
+                </td>
+                <td width="25%">
                     <strong>Kategori:</strong> {{ $category ? $category : 'Semua Kategori' }}
                 </td>
-                <td width="34%" class="text-end">
+                <td width="25%" class="text-end">
                     <strong>Status Filter:</strong> {{ $status ? $status : 'Semua Status' }}
                 </td>
             </tr>
@@ -267,23 +270,31 @@
     </table>
 
     <!-- Tabel Data Stok -->
-    <div class="section-title">Daftar Stok Bahan Baku & Supplies Cafe</div>
+    <div class="section-title">Daftar Stok Bahan Baku & Menu POS Calathea</div>
     <table class="data-table">
         <thead>
             <tr>
                 <th width="5%" class="text-center">No</th>
-                <th width="30%">Nama Produk Bahan Baku</th>
-                <th width="20%">Kategori</th>
+                <th width="15%">Tipe Item</th>
+                <th width="25%">Nama Produk / Item</th>
+                <th width="15%">Kategori</th>
                 <th width="12%" class="text-center">Stok Saat Ini</th>
-                <th width="10%" class="text-center">Min. Stok</th>
-                <th width="11%" class="text-center">Status</th>
-                <th width="12%" class="text-end">Total Nilai</th>
+                <th width="8%" class="text-center">Min.</th>
+                <th width="10%" class="text-center">Status</th>
+                <th width="10%" class="text-end">Total Nilai</th>
             </tr>
         </thead>
         <tbody>
             @forelse($stocks as $index => $item)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
+                <td>
+                    @if($item->type === 'pos_menu' || $item->is_pos_item)
+                        <span style="color: #15803d; font-weight: bold;">Menu POS</span>
+                    @else
+                        <span style="color: #64748b;">Bahan Baku</span>
+                    @endif
+                </td>
                 <td>
                     <strong>{{ $item->product_name }}</strong>
                 </td>
@@ -303,7 +314,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="text-center" style="padding: 15px; color: #64748b;">
+                <td colspan="8" class="text-center" style="padding: 15px; color: #64748b;">
                     Tidak ada produk stok bahan baku ditemukan.
                 </td>
             </tr>
@@ -311,7 +322,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3" class="text-end" style="font-weight: bold;">TOTAL SELURUH STOK & ASET :</td>
+                <td colspan="4" class="text-end" style="font-weight: bold;">TOTAL SELURUH STOK & ASET :</td>
                 <td class="text-center" style="font-weight: bold;">{{ number_format($totalStockUnits) }} Unit</td>
                 <td colspan="2"></td>
                 <td class="text-end" style="font-weight: bold; color: #b91c1c;">

@@ -14,24 +14,36 @@ class StockController extends Controller
      */
     public function index(Request $request)
     {
-        // Auto seed default categories & products if empty
-        if (StockCategory::count() === 0 || Stock::count() === 0) {
-            (new \Database\Seeders\StockSeeder())->run();
-        }
-
         $search = $request->input('search');
         $category = $request->input('category');
+        $type = $request->input('type'); // 'all', 'raw_material', 'pos_menu'
         $status = $request->input('status');
 
         $query = Stock::query();
 
         if (!empty($search)) {
-            $query->where('product_name', 'like', "%{$search}%")
+            $query->where(function($q) use ($search) {
+                $q->where('product_name', 'like', "%{$search}%")
                   ->orWhere('notes', 'like', "%{$search}%");
+            });
         }
 
         if (!empty($category)) {
             $query->where('category', $category);
+        }
+
+        if (!empty($type) && $type !== 'all') {
+            if ($type === 'pos_menu') {
+                $query->where(function($q) {
+                    $q->where('type', 'pos_menu')
+                      ->orWhere('is_pos_item', true);
+                });
+            } else {
+                $query->where(function($q) {
+                    $q->where('type', 'raw_material')
+                      ->where('is_pos_item', false);
+                });
+            }
         }
 
         $stocks = (clone $query)->orderBy('product_name', 'asc')->get();
@@ -59,6 +71,11 @@ class StockController extends Controller
             return $item->current_stock <= 0;
         })->count();
 
+        $rawMaterialCount = Stock::where('type', 'raw_material')->where('is_pos_item', false)->count();
+        $posMenuCount = Stock::where(function($q) {
+            $q->where('type', 'pos_menu')->orWhere('is_pos_item', true);
+        })->count();
+
         $categories = Stock::getCategories();
         $units = Stock::$units;
 
@@ -69,10 +86,13 @@ class StockController extends Controller
             'totalStockValue',
             'lowStockCount',
             'outOfStockCount',
+            'rawMaterialCount',
+            'posMenuCount',
             'categories',
             'units',
             'search',
             'category',
+            'type',
             'status'
         ));
     }
@@ -101,6 +121,7 @@ class StockController extends Controller
         $validated = $request->validate([
             'product_name' => 'required|string|max:255|unique:stocks,product_name',
             'category' => 'required|string',
+            'type' => 'required|in:raw_material,pos_menu',
             'current_stock' => 'required|integer|min:0',
             'minimum_stock' => 'required|integer|min:0',
             'unit' => 'required|string',
@@ -109,12 +130,16 @@ class StockController extends Controller
             'notes' => 'nullable|string|max:255',
         ]);
 
+        // Auto determine is_pos_item flag
+        $validated['is_pos_item'] = ($validated['type'] === 'pos_menu');
+
         // Auto add category if not exists
         StockCategory::firstOrCreate(['name' => trim($validated['category'])]);
 
         Stock::create($validated);
 
-        return redirect()->route('stocks.index')->with('success', 'Produk stok bahan baku berhasil ditambahkan!');
+        $label = $validated['type'] === 'pos_menu' ? 'Menu POS Kasir' : 'Bahan Baku';
+        return redirect()->route('stocks.index')->with('success', "Item stok ({$label}) berhasil ditambahkan!");
     }
 
     /**
@@ -125,6 +150,7 @@ class StockController extends Controller
         $validated = $request->validate([
             'product_name' => 'required|string|max:255|unique:stocks,product_name,' . $stock->id,
             'category' => 'required|string',
+            'type' => 'required|in:raw_material,pos_menu',
             'current_stock' => 'required|integer|min:0',
             'minimum_stock' => 'required|integer|min:0',
             'unit' => 'required|string',
@@ -132,6 +158,9 @@ class StockController extends Controller
             'last_restock_date' => 'required|date',
             'notes' => 'nullable|string|max:255',
         ]);
+
+        // Auto determine is_pos_item flag
+        $validated['is_pos_item'] = ($validated['type'] === 'pos_menu');
 
         // Auto add category if not exists
         StockCategory::firstOrCreate(['name' => trim($validated['category'])]);
@@ -182,17 +211,34 @@ class StockController extends Controller
     {
         $search = $request->input('search');
         $category = $request->input('category');
+        $type = $request->input('type');
         $status = $request->input('status');
 
         $query = Stock::query();
 
         if (!empty($search)) {
-            $query->where('product_name', 'like', "%{$search}%")
+            $query->where(function($q) use ($search) {
+                $q->where('product_name', 'like', "%{$search}%")
                   ->orWhere('notes', 'like', "%{$search}%");
+            });
         }
 
         if (!empty($category)) {
             $query->where('category', $category);
+        }
+
+        if (!empty($type) && $type !== 'all') {
+            if ($type === 'pos_menu') {
+                $query->where(function($q) {
+                    $q->where('type', 'pos_menu')
+                      ->orWhere('is_pos_item', true);
+                });
+            } else {
+                $query->where(function($q) {
+                    $q->where('type', 'raw_material')
+                      ->where('is_pos_item', false);
+                });
+            }
         }
 
         $stocks = (clone $query)->orderBy('product_name', 'asc')->get();
@@ -216,6 +262,7 @@ class StockController extends Controller
             'totalStockValue' => $totalStockValue,
             'search' => $search,
             'category' => $category,
+            'type' => $type,
             'status' => $status,
             'generatedAt' => now()->translatedFormat('d F Y H:i'),
         ];

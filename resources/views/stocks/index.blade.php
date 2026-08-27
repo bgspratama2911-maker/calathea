@@ -24,10 +24,29 @@
                 <form action="{{ route('stocks.store') }}" method="POST">
                     @csrf
                     <div class="row g-3">
+                        <!-- Tipe Stok (Pemisah Bahan Baku vs Menu POS) -->
+                        <div class="col-md-3">
+                            <label for="type" class="form-label fw-bold small text-navy">
+                                <i class="fa-solid fa-tags me-1 text-primary"></i>Tipe Item Stok <span class="text-danger">*</span>
+                            </label>
+                            <select name="type" id="type" class="form-select @error('type') is-invalid @enderror" required>
+                                <option value="raw_material" {{ old('type', 'raw_material') == 'raw_material' ? 'selected' : '' }}>
+                                    📦 Bahan Baku (Gudang/Dapur)
+                                </option>
+                                <option value="pos_menu" {{ old('type') == 'pos_menu' ? 'selected' : '' }}>
+                                    ☕ Menu Jual POS Kasir (Tampil di Kasir)
+                                </option>
+                            </select>
+                            <small class="text-muted" style="font-size: 0.72rem;">Pilih jika item ini untuk dijual di kasir atau bahan baku ditarik gudang.</small>
+                            @error('type')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <!-- Nama Produk -->
-                        <div class="col-md-4">
-                            <label for="product_name" class="form-label fw-medium small">Nama Produk <span class="text-danger">*</span></label>
-                            <input type="text" name="product_name" id="product_name" class="form-control @error('product_name') is-invalid @enderror" placeholder="Contoh: Biji Kopi 70/30 / Susu UHT / Syrup" value="{{ old('product_name') }}" required>
+                        <div class="col-md-3">
+                            <label for="product_name" class="form-label fw-medium small">Nama Produk / Item <span class="text-danger">*</span></label>
+                            <input type="text" name="product_name" id="product_name" class="form-control @error('product_name') is-invalid @enderror" placeholder="Contoh: Biji Kopi / Caramel Latte" value="{{ old('product_name') }}" required>
                             @error('product_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -48,7 +67,7 @@
                         </div>
 
                         <!-- Stok Saat Ini -->
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label for="current_stock" class="form-label fw-medium small">Stok Awal <span class="text-danger">*</span></label>
                             <input type="number" name="current_stock" id="current_stock" class="form-control @error('current_stock') is-invalid @enderror" min="0" value="{{ old('current_stock', 10) }}" required>
                             @error('current_stock')
@@ -80,7 +99,7 @@
 
                         <!-- Harga Satuan -->
                         <div class="col-md-3">
-                            <label for="unit_price" class="form-label fw-medium small">Harga per Satuan (Rp) <span class="text-danger">*</span></label>
+                            <label for="unit_price" class="form-label fw-medium small">Harga Jual / Beli per Satuan (Rp) <span class="text-danger">*</span></label>
                             <input type="number" name="unit_price" id="unit_price" class="form-control @error('unit_price') is-invalid @enderror" placeholder="0" min="0" step="any" value="{{ old('unit_price', 0) }}" required>
                             @error('unit_price')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -88,7 +107,7 @@
                         </div>
 
                         <!-- Tanggal Restock -->
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label for="last_restock_date" class="form-label fw-medium small">Tanggal Restock <span class="text-danger">*</span></label>
                             <input type="date" name="last_restock_date" id="last_restock_date" class="form-control @error('last_restock_date') is-invalid @enderror" value="{{ old('last_restock_date', date('Y-m-d')) }}" required>
                             @error('last_restock_date')
@@ -97,9 +116,9 @@
                         </div>
 
                         <!-- Catatan -->
-                        <div class="col-md-4">
-                            <label for="notes" class="form-label fw-medium small">Catatan Supplier / Keterangan</label>
-                            <input type="text" name="notes" id="notes" class="form-control @error('notes') is-invalid @enderror" placeholder="Contoh: Toko Kopi Utama / Supplier A" value="{{ old('notes') }}">
+                        <div class="col-md-2">
+                            <label for="notes" class="form-label fw-medium small">Catatan / Supplier</label>
+                            <input type="text" name="notes" id="notes" class="form-control @error('notes') is-invalid @enderror" placeholder="Keterangan..." value="{{ old('notes') }}">
                             @error('notes')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -156,8 +175,12 @@
                     <i class="fa-solid fa-cubes fa-2x"></i>
                 </div>
                 <div>
-                    <span class="text-muted small fw-medium">Total Jenis Produk</span>
-                    <h4 class="fw-bold mb-0 text-navy">{{ number_format($totalProducts) }} <span class="fs-6 text-muted fw-normal">Item</span></h4>
+                    <span class="text-muted small fw-medium">Total Item Stok</span>
+                    <h4 class="fw-bold mb-1 text-navy">{{ number_format($totalProducts) }} <span class="fs-6 text-muted fw-normal">Item</span></h4>
+                    <div class="small" style="font-size: 0.75rem;">
+                        <span class="badge bg-secondary-subtle text-secondary me-1">📦 {{ $rawMaterialCount }} Bahan</span>
+                        <span class="badge bg-success-subtle text-success">☕ {{ $posMenuCount }} Menu POS</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -219,15 +242,24 @@
             <div class="card-body py-3">
                 <form action="{{ route('stocks.index') }}" method="GET" class="row g-2 align-items-center">
                     <!-- Cari Kata Kunci -->
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="input-group input-group-sm">
                             <span class="input-group-text bg-light"><i class="fa-solid fa-magnifying-glass me-1"></i></span>
-                            <input type="text" name="search" class="form-control" placeholder="Cari nama produk bahan baku..." value="{{ $search }}">
+                            <input type="text" name="search" class="form-control" placeholder="Cari nama produk / stok..." value="{{ $search }}">
                         </div>
                     </div>
 
-                    <!-- Filter Kategori -->
+                    <!-- Filter Tipe Stok (Pemisah Bahan Baku vs Menu POS) -->
                     <div class="col-md-3">
+                        <select name="type" class="form-select form-select-sm">
+                            <option value="">🏷️ -- Semua Tipe Stok --</option>
+                            <option value="raw_material" {{ $type == 'raw_material' ? 'selected' : '' }}>📦 Bahan Baku (Gudang)</option>
+                            <option value="pos_menu" {{ $type == 'pos_menu' ? 'selected' : '' }}>☕ Menu POS Kasir (Tampil di POS)</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter Kategori -->
+                    <div class="col-md-2">
                         <select name="category" class="form-select form-select-sm searchable-select">
                             <option value="">🔍 -- Semua Kategori --</option>
                             @foreach($categories as $cat)
@@ -247,15 +279,15 @@
                     </div>
 
                     <!-- Buttons -->
-                    <div class="col-md-3 d-flex gap-2">
+                    <div class="col-md-2 d-flex gap-2">
                         <button type="submit" class="btn btn-primary btn-sm flex-fill">
                             <i class="fa-solid fa-filter me-1"></i> Filter
                         </button>
                         <a href="{{ route('stocks.index') }}" class="btn btn-outline-secondary btn-sm" title="Reset Filter">
                             <i class="fa-solid fa-rotate-left"></i>
                         </a>
-                        <a href="{{ route('stocks.export-pdf', ['search' => $search, 'category' => $category, 'status' => $status]) }}" class="btn btn-danger btn-sm flex-fill" target="_blank">
-                            <i class="fa-solid fa-file-pdf me-1"></i> Cetak PDF
+                        <a href="{{ route('stocks.export-pdf', ['search' => $search, 'category' => $category, 'type' => $type, 'status' => $status]) }}" class="btn btn-danger btn-sm flex-fill" target="_blank">
+                            <i class="fa-solid fa-file-pdf me-1"></i> PDF
                         </a>
                     </div>
                 </form>
@@ -264,15 +296,15 @@
     </div>
 </div>
 
-<!-- Tabel Data Stok Bahan Baku -->
+<!-- Tabel Data Stok Bahan Baku & Menu POS -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card card-custom">
             <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                 <h6 class="fw-bold mb-0 text-navy">
-                    <i class="fa-solid fa-list-check me-2 text-primary"></i>Monitoring Stok Bahan Baku Calathea Coffee
+                    <i class="fa-solid fa-list-check me-2 text-primary"></i>Daftar Stok Bahan Baku & Menu POS Kasir
                 </h6>
-                <span class="badge bg-secondary-subtle text-secondary small">Total {{ count($stocks) }} Produk</span>
+                <span class="badge bg-secondary-subtle text-secondary small">Total {{ count($stocks) }} Item</span>
             </div>
             <div class="card-body p-0">
                 @if(count($stocks) > 0)
@@ -280,8 +312,9 @@
                     <table class="table table-hover align-middle table-custom mb-0">
                         <thead>
                             <tr>
-                                <th class="text-center" style="width: 50px;">No</th>
-                                <th>Nama Produk</th>
+                                <th class="text-center" style="width: 45px;">No</th>
+                                <th>Tipe Item</th>
+                                <th>Nama Produk / Item</th>
                                 <th>Kategori</th>
                                 <th class="text-center">Stok Saat Ini</th>
                                 <th class="text-center">Batas Minimal</th>
@@ -295,6 +328,17 @@
                             @foreach($stocks as $index => $item)
                             <tr class="{{ $item->status == 'Habis' ? 'table-danger' : ($item->status == 'Menipis' ? 'table-warning' : '') }}">
                                 <td class="text-center fw-medium text-muted">{{ $index + 1 }}</td>
+                                <td>
+                                    @if($item->type === 'pos_menu' || $item->is_pos_item)
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.72rem;">
+                                            <i class="fa-solid fa-cash-register me-1"></i>Menu POS
+                                        </span>
+                                    @else
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1" style="font-size: 0.72rem;">
+                                            <i class="fa-solid fa-box-archive me-1"></i>Bahan Baku
+                                        </span>
+                                    @endif
+                                </td>
                                 <td>
                                     <span class="fw-bold text-dark d-block fs-6">{{ $item->product_name }}</span>
                                     @if($item->notes)
@@ -363,7 +407,7 @@
                                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <form action="{{ route('stocks.adjust', $item->id) }}" method="POST">
-                                            @csrf
+                                             @csrf
                                             <div class="modal-body">
                                                 <div class="alert alert-info py-2 small mb-3">
                                                     Stok saat ini: <strong>{{ $item->current_stock }} {{ $item->unit }}</strong>
@@ -407,6 +451,18 @@
                                             <div class="modal-body">
                                                 <div class="row g-3">
                                                     <div class="col-md-6">
+                                                        <label class="form-label fw-bold small text-navy">Tipe Item Stok <span class="text-danger">*</span></label>
+                                                        <select name="type" class="form-select" required>
+                                                            <option value="raw_material" {{ ($item->type == 'raw_material' && !$item->is_pos_item) ? 'selected' : '' }}>
+                                                                📦 Bahan Baku (Gudang/Dapur)
+                                                            </option>
+                                                            <option value="pos_menu" {{ ($item->type == 'pos_menu' || $item->is_pos_item) ? 'selected' : '' }}>
+                                                                ☕ Menu Jual POS Kasir (Tampil di Kasir)
+                                                            </option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="col-md-6">
                                                         <label class="form-label fw-medium small">Nama Produk <span class="text-danger">*</span></label>
                                                         <input type="text" name="product_name" class="form-control" value="{{ $item->product_name }}" required>
                                                     </div>
@@ -416,6 +472,15 @@
                                                         <select name="category" class="form-select" required>
                                                             @foreach($categories as $cat)
                                                                 <option value="{{ $cat }}" {{ $item->category == $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-medium small">Satuan <span class="text-danger">*</span></label>
+                                                        <select name="unit" class="form-select" required>
+                                                            @foreach($units as $u)
+                                                                <option value="{{ $u }}" {{ $item->unit == $u ? 'selected' : '' }}>{{ $u }}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>
@@ -430,16 +495,7 @@
                                                         <input type="number" name="minimum_stock" class="form-control" value="{{ $item->minimum_stock }}" min="0" required>
                                                     </div>
 
-                                                    <div class="col-md-3">
-                                                        <label class="form-label fw-medium small">Satuan <span class="text-danger">*</span></label>
-                                                        <select name="unit" class="form-select" required>
-                                                            @foreach($units as $u)
-                                                                <option value="{{ $u }}" {{ $item->unit == $u ? 'selected' : '' }}>{{ $u }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="col-md-3">
+                                                    <div class="col-md-6">
                                                         <label class="form-label fw-medium small">Harga per Satuan (Rp) <span class="text-danger">*</span></label>
                                                         <input type="number" name="unit_price" class="form-control" value="{{ (int)$item->unit_price }}" min="0" step="any" required>
                                                     </div>
@@ -468,7 +524,7 @@
                         <!-- TOTAL ROW AT BOTTOM -->
                         <tfoot class="table-group-divider bg-light fw-bold">
                             <tr class="table-secondary">
-                                <td colspan="3" class="text-end text-uppercase">TOTAL SELURUH STOK & ASET :</td>
+                                <td colspan="4" class="text-end text-uppercase">TOTAL SELURUH STOK & ASET :</td>
                                 <td class="text-center text-primary fs-6">{{ number_format($totalStockUnits) }} Unit</td>
                                 <td colspan="3"></td>
                                 <td class="text-end text-danger fs-6">Rp {{ number_format($totalStockValue, 0, ',', '.') }}</td>

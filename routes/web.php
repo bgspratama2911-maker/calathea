@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
     Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
     Route::post('/sales/categories', [SaleController::class, 'storeCategory'])->name('sales.categories.store');
+    Route::post('/sales/bulk-delete', [SaleController::class, 'bulkDelete'])->name('sales.bulk-delete');
     Route::put('/sales/{sale}', [SaleController::class, 'update'])->name('sales.update');
     Route::delete('/sales/{sale}', [SaleController::class, 'destroy'])->name('sales.destroy');
     Route::get('/sales/export-pdf', [SaleController::class, 'exportPdf'])->name('sales.export-pdf');

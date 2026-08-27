@@ -14,6 +14,8 @@ class Stock extends Model
     protected $fillable = [
         'product_name',
         'category',
+        'type', // 'raw_material' (Bahan Baku) or 'pos_menu' (Menu POS Kasir)
+        'is_pos_item', // boolean
         'current_stock',
         'minimum_stock',
         'unit',
@@ -27,6 +29,7 @@ class Stock extends Model
         'unit_price' => 'decimal:2',
         'current_stock' => 'integer',
         'minimum_stock' => 'integer',
+        'is_pos_item' => 'boolean',
     ];
 
     // Status Stok Computasi

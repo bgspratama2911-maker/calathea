@@ -369,150 +369,180 @@
     <!-- Tabel Rincian Data Penjualan Kasir -->
     <div class="col-lg-7">
         <div class="card card-custom h-100">
-            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h6 class="fw-bold mb-0 text-navy">
                     <i class="fa-solid fa-receipt me-2 text-primary"></i>Rincian Transaksi Penjualan Kopi
                 </h6>
-                <span class="badge bg-secondary-subtle text-secondary small">Total {{ count($sales) }} Transaksi</span>
+                <div class="d-flex align-items-center gap-2">
+                    <!-- Bulk Delete Button (Hidden by default until at least 1 checkbox checked) -->
+                    <button type="button" class="btn btn-danger btn-sm fw-medium d-none" id="btnBulkDelete">
+                        <i class="fa-solid fa-trash-can me-1"></i> Hapus Terpilih (<span id="selectedCount">0</span>)
+                    </button>
+                    <span class="badge bg-secondary-subtle text-secondary small">Total {{ $sales->total() }} Transaksi</span>
+                </div>
             </div>
             <div class="card-body p-0">
-                @if(count($sales) > 0)
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle table-custom mb-0">
-                        <thead>
-                            <tr>
-                                <th class="text-center" style="width: 40px;">No</th>
-                                <th>Tanggal</th>
-                                <th>Nama Produk</th>
-                                <th class="text-center">Jumlah</th>
-                                <th class="text-end">Harga</th>
-                                <th class="text-end">Total Omzet</th>
-                                <th class="text-center" style="width: 90px;">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($sales as $index => $sale)
-                            <tr>
-                                <td class="text-center fw-medium text-muted">{{ $index + 1 }}</td>
-                                <td style="white-space: nowrap;">
-                                    <i class="fa-regular fa-calendar me-1 text-muted"></i>
-                                    {{ \Carbon\Carbon::parse($sale->date)->format('d/m/Y') }}
-                                </td>
-                                <td>
-                                    <span class="fw-bold text-dark d-block">{{ $sale->product_name }}</span>
-                                    <small class="text-muted" style="font-size: 0.72rem;">{{ $sale->payment_method }} @if($sale->notes) • {{ $sale->notes }} @endif</small>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-primary-subtle text-primary fw-bold">{{ $sale->quantity_sold }} Cup</span>
-                                </td>
-                                <td class="text-end text-muted small" style="white-space: nowrap;">
-                                    Rp {{ number_format($sale->price_per_unit, 0, ',', '.') }}
-                                </td>
-                                <td class="text-end fw-bold text-success" style="white-space: nowrap;">
-                                    Rp {{ number_format($sale->total_income, 0, ',', '.') }}
-                                </td>
-                                <td class="text-center">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <!-- Edit Modal Trigger -->
-                                        <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editSaleModal{{ $sale->id }}" title="Edit Transaksi">
-                                            <i class="fa-solid fa-pen-to-square"></i>
-                                        </button>
-                                        <!-- Delete Form -->
-                                        <form action="{{ route('sales.destroy', $sale->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button" class="btn btn-outline-danger btn-delete" title="Hapus Transaksi">
+                @if($sales->count() > 0)
+                <form id="bulkDeleteForm" action="{{ route('sales.bulk-delete') }}" method="POST">
+                    @csrf
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle table-custom mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width: 35px;">
+                                        <input type="checkbox" class="form-check-input" id="checkAllSales" title="Pilih Semua Transaksi di Halaman Ini">
+                                    </th>
+                                    <th class="text-center" style="width: 35px;">No</th>
+                                    <th>Tanggal</th>
+                                    <th>Nama Produk</th>
+                                    <th class="text-center">Jumlah</th>
+                                    <th class="text-end">Harga</th>
+                                    <th class="text-end">Total Omzet</th>
+                                    <th class="text-center" style="width: 85px;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($sales as $index => $sale)
+                                <tr>
+                                    <td class="text-center">
+                                        <input type="checkbox" name="ids[]" value="{{ $sale->id }}" class="form-check-input sale-checkbox">
+                                    </td>
+                                    <td class="text-center fw-medium text-muted">{{ $sales->firstItem() + $index }}</td>
+                                    <td style="white-space: nowrap;">
+                                        <i class="fa-regular fa-calendar me-1 text-muted"></i>
+                                        {{ \Carbon\Carbon::parse($sale->date)->format('d/m/Y') }}
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-dark d-block">{{ $sale->product_name }}</span>
+                                        <small class="text-muted" style="font-size: 0.72rem;">{{ $sale->payment_method }} @if($sale->notes) • {{ $sale->notes }} @endif</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary-subtle text-primary fw-bold">{{ $sale->quantity_sold }} Cup</span>
+                                    </td>
+                                    <td class="text-end text-muted small" style="white-space: nowrap;">
+                                        Rp {{ number_format($sale->price_per_unit, 0, ',', '.') }}
+                                    </td>
+                                    <td class="text-end fw-bold text-success" style="white-space: nowrap;">
+                                        Rp {{ number_format($sale->total_income, 0, ',', '.') }}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <!-- Edit Modal Trigger -->
+                                            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editSaleModal{{ $sale->id }}" title="Edit Transaksi">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                            <!-- Delete Button -->
+                                            <button type="button" class="btn btn-outline-danger btn-delete-single" data-form-id="deleteForm{{ $sale->id }}" title="Hapus Transaksi">
                                                 <i class="fa-solid fa-trash-can"></i>
                                             </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <!-- Edit Sale Modal -->
-                            <div class="modal fade" id="editSaleModal{{ $sale->id }}" tabindex="-1" aria-labelledby="editSaleModalLabel{{ $sale->id }}" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content">
-                                        <div class="modal-header modal-header-custom">
-                                            <h5 class="modal-title fs-6 fw-bold" id="editSaleModalLabel{{ $sale->id }}">
-                                                <i class="fa-solid fa-pen-to-square me-2"></i>Edit Penjualan #{{ $sale->id }}
-                                            </h5>
-                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
-                                        <form action="{{ route('sales.update', $sale->id) }}" method="POST">
-                                            @csrf
-                                            @method('PUT')
-                                            <div class="modal-body">
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-medium small">Tanggal <span class="text-danger">*</span></label>
-                                                    <input type="date" name="date" class="form-control" value="{{ \Carbon\Carbon::parse($sale->date)->format('Y-m-d') }}" required>
-                                                </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                            <!-- TOTAL ROW AT BOTTOM -->
+                            <tfoot class="table-group-divider bg-light fw-bold">
+                                <tr class="table-secondary">
+                                    <td colspan="4" class="text-end text-uppercase">TOTAL PENJUALAN TERFILTER :</td>
+                                    <td class="text-center text-primary fs-6">{{ number_format($filteredCups) }} Cup</td>
+                                    <td></td>
+                                    <td class="text-end text-success fs-6">Rp {{ number_format($filteredIncome, 0, ',', '.') }}</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </form>
 
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-medium small">Nama Produk Kopi <span class="text-danger">*</span></label>
-                                                    <select name="product_name" class="form-select" required>
-                                                        @foreach($productNames as $pn)
-                                                            <option value="{{ $pn }}" {{ $sale->product_name == $pn ? 'selected' : '' }}>{{ $pn }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
+                <!-- Hidden Delete Single Forms -->
+                @foreach($sales as $sale)
+                <form id="deleteForm{{ $sale->id }}" action="{{ route('sales.destroy', $sale->id) }}" method="POST" class="d-none">
+                    @csrf
+                    @method('DELETE')
+                </form>
 
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-medium small">Kategori <span class="text-danger">*</span></label>
-                                                    <select name="category" class="form-select" required>
-                                                        @foreach($categories as $cat)
-                                                            <option value="{{ $cat }}" {{ $sale->category == $cat ? 'selected' : '' }}>{{ $cat }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
+                <!-- Edit Sale Modal -->
+                <div class="modal fade" id="editSaleModal{{ $sale->id }}" tabindex="-1" aria-labelledby="editSaleModalLabel{{ $sale->id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header modal-header-custom">
+                                <h5 class="modal-title fs-6 fw-bold" id="editSaleModalLabel{{ $sale->id }}">
+                                    <i class="fa-solid fa-pen-to-square me-2"></i>Edit Penjualan #{{ $sale->id }}
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form action="{{ route('sales.update', $sale->id) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-medium small">Tanggal <span class="text-danger">*</span></label>
+                                        <input type="date" name="date" class="form-control" value="{{ \Carbon\Carbon::parse($sale->date)->format('Y-m-d') }}" required>
+                                    </div>
 
-                                                <div class="row g-2 mb-3">
-                                                    <div class="col-6">
-                                                        <label class="form-label fw-medium small">Jumlah Cup <span class="text-danger">*</span></label>
-                                                        <input type="number" name="quantity_sold" class="form-control" value="{{ $sale->quantity_sold }}" min="1" required>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <label class="form-label fw-medium small">Harga Satuan (Rp) <span class="text-danger">*</span></label>
-                                                        <input type="number" name="price_per_unit" class="form-control" value="{{ (int)$sale->price_per_unit }}" min="0" step="any" required>
-                                                    </div>
-                                                </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-medium small">Nama Produk Kopi <span class="text-danger">*</span></label>
+                                        <select name="product_name" class="form-select" required>
+                                            @foreach($productNames as $pn)
+                                                <option value="{{ $pn }}" {{ $sale->product_name == $pn ? 'selected' : '' }}>{{ $pn }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
 
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-medium small">Metode Pembayaran <span class="text-danger">*</span></label>
-                                                    <select name="payment_method" class="form-select" required>
-                                                        @foreach($paymentMethods as $pm)
-                                                            <option value="{{ $pm }}" {{ $sale->payment_method == $pm ? 'selected' : '' }}>{{ $pm }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-medium small">Kategori <span class="text-danger">*</span></label>
+                                        <select name="category" class="form-select" required>
+                                            @foreach($categories as $cat)
+                                                <option value="{{ $cat }}" {{ $sale->category == $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
 
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-medium small">Catatan Kasir</label>
-                                                    <input type="text" name="notes" class="form-control" value="{{ $sale->notes }}">
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer bg-light py-2">
-                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                                                <button type="submit" class="btn btn-primary btn-sm">Simpan Perubahan</button>
-                                            </div>
-                                        </form>
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <label class="form-label fw-medium small">Jumlah Cup <span class="text-danger">*</span></label>
+                                            <input type="number" name="quantity_sold" class="form-control" value="{{ $sale->quantity_sold }}" min="1" required>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label fw-medium small">Harga Satuan (Rp) <span class="text-danger">*</span></label>
+                                            <input type="number" name="price_per_unit" class="form-control" value="{{ (int)$sale->price_per_unit }}" min="0" step="any" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-medium small">Metode Pembayaran <span class="text-danger">*</span></label>
+                                        <select name="payment_method" class="form-select" required>
+                                            @foreach($paymentMethods as $pm)
+                                                <option value="{{ $pm }}" {{ $sale->payment_method == $pm ? 'selected' : '' }}>{{ $pm }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-medium small">Catatan Kasir</label>
+                                        <input type="text" name="notes" class="form-control" value="{{ $sale->notes }}">
                                     </div>
                                 </div>
-                            </div>
-                            @endforeach
-                        </tbody>
-                        <!-- TOTAL ROW AT BOTTOM -->
-                        <tfoot class="table-group-divider bg-light fw-bold">
-                            <tr class="table-secondary">
-                                <td colspan="3" class="text-end text-uppercase">TOTAL PENJUALAN :</td>
-                                <td class="text-center text-primary fs-6">{{ number_format($filteredCups) }} Cup</td>
-                                <td></td>
-                                <td class="text-end text-success fs-6">Rp {{ number_format($filteredIncome, 0, ',', '.') }}</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                                <div class="modal-footer bg-light py-2">
+                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-primary btn-sm">Simpan Perubahan</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
+                @endforeach
+
+                <!-- Pagination Links -->
+                <div class="p-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="small text-muted">
+                        Menampilkan <strong>{{ $sales->firstItem() ?? 0 }}</strong> sampai <strong>{{ $sales->lastItem() ?? 0 }}</strong> dari <strong>{{ $sales->total() }}</strong> transaksi
+                    </div>
+                    <div>
+                        {{ $sales->links() }}
+                    </div>
+                </div>
+
                 @else
                 <div class="p-5 text-center text-muted">
                     <i class="fa-solid fa-mug-hot fa-3x mb-3 text-secondary opacity-50"></i>
@@ -569,12 +599,75 @@
             });
         }
 
-        // Confirmation before delete using SweetAlert2
-        const deleteButtons = document.querySelectorAll('.btn-delete');
-        deleteButtons.forEach(button => {
+        // ==========================================
+        // BULK DELETE & CHECKBOX SELECT ALL LOGIC
+        // ==========================================
+        const checkAllSales = document.getElementById('checkAllSales');
+        const saleCheckboxes = document.querySelectorAll('.sale-checkbox');
+        const btnBulkDelete = document.getElementById('btnBulkDelete');
+        const selectedCount = document.getElementById('selectedCount');
+        const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+
+        function updateBulkDeleteButton() {
+            const checkedBoxes = document.querySelectorAll('.sale-checkbox:checked');
+            const totalChecked = checkedBoxes.length;
+
+            if (totalChecked > 0) {
+                btnBulkDelete.classList.remove('d-none');
+                selectedCount.textContent = totalChecked;
+            } else {
+                btnBulkDelete.classList.add('d-none');
+                selectedCount.textContent = '0';
+            }
+
+            if (checkAllSales) {
+                checkAllSales.checked = (saleCheckboxes.length > 0 && totalChecked === saleCheckboxes.length);
+                checkAllSales.indeterminate = (totalChecked > 0 && totalChecked < saleCheckboxes.length);
+            }
+        }
+
+        if (checkAllSales) {
+            checkAllSales.addEventListener('change', function () {
+                saleCheckboxes.forEach(cb => {
+                    cb.checked = checkAllSales.checked;
+                });
+                updateBulkDeleteButton();
+            });
+        }
+
+        saleCheckboxes.forEach(cb => {
+            cb.addEventListener('change', updateBulkDeleteButton);
+        });
+
+        if (btnBulkDelete) {
+            btnBulkDelete.addEventListener('click', function () {
+                const totalChecked = document.querySelectorAll('.sale-checkbox:checked').length;
+                if (totalChecked === 0) return;
+
+                Swal.fire({
+                    title: `Hapus ${totalChecked} Transaksi Terpilih?`,
+                    text: "Semua data transaksi penjualan yang dipilih akan dihapus secara permanen!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: `Ya, Hapus (${totalChecked})!`,
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        bulkDeleteForm.submit();
+                    }
+                });
+            });
+        }
+
+        // Confirmation before delete single item using SweetAlert2
+        const deleteSingleButtons = document.querySelectorAll('.btn-delete-single');
+        deleteSingleButtons.forEach(button => {
             button.addEventListener('click', function (e) {
                 e.preventDefault();
-                const form = this.closest('form');
+                const formId = this.getAttribute('data-form-id');
+                const form = document.getElementById(formId);
                 
                 Swal.fire({
                     title: 'Hapus Transaksi Penjualan?',
@@ -586,7 +679,7 @@
                     confirmButtonText: 'Ya, Hapus!',
                     cancelButtonText: 'Batal'
                 }).then((result) => {
-                    if (result.isConfirmed) {
+                    if (result.isConfirmed && form) {
                         form.submit();
                     }
                 });

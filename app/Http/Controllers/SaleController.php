@@ -15,9 +15,18 @@ class SaleController extends Controller
      */
     public function index(Request $request)
     {
-        // Auto seed sample data & categories if empty
-        if (SaleCategory::count() === 0 || Sale::count() === 0) {
-            (new \Database\Seeders\SaleSeeder())->run();
+        // Seed default sale categories only if empty (do not seed sales transactions)
+        if (SaleCategory::count() === 0) {
+            $defaultCategories = [
+                'Espresso Based',
+                'Coffee Specialty',
+                'Flavored Coffee',
+                'Non-Coffee & Tea',
+                'Botolan / Takeaway',
+            ];
+            foreach ($defaultCategories as $catName) {
+                SaleCategory::firstOrCreate(['name' => $catName]);
+            }
         }
 
         $startDate = $request->input('start_date');
@@ -43,7 +52,8 @@ class SaleController extends Controller
             $query->where('category', $category);
         }
 
-        $sales = (clone $query)->orderBy('date', 'desc')->orderBy('id', 'desc')->get();
+        $allFilteredSales = (clone $query)->orderBy('date', 'desc')->orderBy('id', 'desc')->get();
+        $sales = (clone $query)->orderBy('date', 'desc')->orderBy('id', 'desc')->paginate(15)->withQueryString();
 
         // 1. KPI Penjualan HARIAN (Today)
         $today = Carbon::today()->format('Y-m-d');
@@ -76,12 +86,12 @@ class SaleController extends Controller
         $bestSellerName = $bestSeller ? $bestSeller->product_name : '-';
         $bestSellerQty = $bestSeller ? $bestSeller->total_qty : 0;
 
-        // 5. Total Ter-filter
-        $filteredIncome = $sales->sum('total_income');
-        $filteredCups = $sales->sum('quantity_sold');
+        // 5. Total Ter-filter (calculated from full filtered set)
+        $filteredIncome = $allFilteredSales->sum('total_income');
+        $filteredCups = $allFilteredSales->sum('quantity_sold');
 
         // 6. Ringkasan Total Kopi yang Laku (Grouped by Product Name)
-        $productBreakdown = $sales->groupBy('product_name')->map(function ($items, $pName) use ($filteredCups) {
+        $productBreakdown = $allFilteredSales->groupBy('product_name')->map(function ($items, $pName) use ($filteredCups) {
             $totalQty = $items->sum('quantity_sold');
             $totalRev = $items->sum('total_income');
             $percentage = $filteredCups > 0 ? ($totalQty / $filteredCups) * 100 : 0;
@@ -97,7 +107,7 @@ class SaleController extends Controller
         })->sortByDesc('total_qty');
 
         // 7. Chart Data Harian (Trend Penjualan Harian)
-        $dailyGrouped = $sales->groupBy(function ($item) {
+        $dailyGrouped = $allFilteredSales->groupBy(function ($item) {
             return Carbon::parse($item->date)->format('Y-m-d');
         })->map(function ($items) {
             return $items->sum('total_income');
@@ -111,7 +121,7 @@ class SaleController extends Controller
         }
 
         // 8. Top 5 Produk Terlaris (Chart)
-        $top5Products = $sales->groupBy('product_name')->map(function ($items, $pName) {
+        $top5Products = $allFilteredSales->groupBy('product_name')->map(function ($items, $pName) {
             return $items->sum('quantity_sold');
         })->sortByDesc(function ($qty) { return $qty; })->take(5);
 
@@ -225,6 +235,21 @@ class SaleController extends Controller
         $sale->delete();
 
         return redirect()->route('sales.index')->with('success', 'Data penjualan kopi berhasil dihapus!');
+    }
+
+    /**
+     * Bulk Delete (Hapus Banyak Data Transaksi Penjualan)
+     */
+    public function bulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:sales,id',
+        ]);
+
+        $count = Sale::whereIn('id', $validated['ids'])->delete();
+
+        return redirect()->route('sales.index')->with('success', "Sebanyak {$count} data transaksi penjualan berhasil dihapus!");
     }
 
     /**

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Sale;
 use App\Models\SaleCategory;
+use App\Models\Stock;
+use App\Models\StockCategory;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -11,44 +13,73 @@ use Illuminate\Support\Facades\DB;
 class PosController extends Controller
 {
     /**
-     * Display Majoo Style POS Interface
+     * Display Calathea POS Interface loaded from Stock table
      */
     public function index()
     {
-        // Auto seed sample data & categories if empty
-        if (SaleCategory::count() === 0 || Sale::count() === 0) {
-            (new \Database\Seeders\SaleSeeder())->run();
+        // Fetch products directly from stocks table that are marked for POS (is_pos_item = 1 or type = 'pos_menu')
+        $dbStocks = Stock::where(function($q) {
+            $q->where('is_pos_item', true)
+              ->orWhere('type', 'pos_menu');
+        })->orderBy('product_name', 'asc')->get();
+
+        // Available Categories from POS Stock items
+        $categories = $dbStocks->pluck('category')->unique()->values()->toArray();
+        if (empty($categories)) {
+            $categories = StockCategory::orderBy('name', 'asc')->pluck('name')->toArray();
+        }
+        // Available placeholder images based on keywords
+        $sampleImages = [
+            'coffee' => 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300&auto=format&fit=crop&q=80',
+            'espresso' => 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=300&auto=format&fit=crop&q=80',
+            'cappucino' => 'https://images.unsplash.com/photo-1534778101976-62847782c213?w=300&auto=format&fit=crop&q=80',
+            'tea' => 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=300&auto=format&fit=crop&q=80',
+            'milk' => 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=300&auto=format&fit=crop&q=80',
+            'matcha' => 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?w=300&auto=format&fit=crop&q=80',
+            'chocolate' => 'https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed?w=300&auto=format&fit=crop&q=80',
+            'food' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&auto=format&fit=crop&q=80',
+            'ice' => 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&auto=format&fit=crop&q=80',
+            'default' => 'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=300&auto=format&fit=crop&q=80'
+        ];
+
+        $products = [];
+        foreach ($dbStocks as $stk) {
+            $nameLower = strtolower($stk->product_name);
+            $catLower = strtolower($stk->category);
+            
+            $img = $sampleImages['default'];
+            if (str_contains($nameLower, 'kopi') || str_contains($catLower, 'kopi')) {
+                $img = $sampleImages['coffee'];
+            } elseif (str_contains($nameLower, 'espresso') || str_contains($nameLower, 'americano')) {
+                $img = $sampleImages['espresso'];
+            } elseif (str_contains($nameLower, 'susu') || str_contains($catLower, 'susu') || str_contains($nameLower, 'creamer')) {
+                $img = $sampleImages['milk'];
+            } elseif (str_contains($nameLower, 'teh') || str_contains($nameLower, 'tea')) {
+                $img = $sampleImages['tea'];
+            } elseif (str_contains($nameLower, 'matcha')) {
+                $img = $sampleImages['matcha'];
+            } elseif (str_contains($nameLower, 'choco') || str_contains($nameLower, 'coklat')) {
+                $img = $sampleImages['chocolate'];
+            } elseif (str_contains($nameLower, 'ice') || str_contains($catLower, 'dessert') || str_contains($nameLower, 'es ')) {
+                $img = $sampleImages['ice'];
+            }
+
+            $products[] = [
+                'id' => $stk->id,
+                'name' => $stk->product_name,
+                'category' => $stk->category,
+                'price' => (float) $stk->unit_price,
+                'discount' => 0,
+                'discount_amount' => 0,
+                'badge' => $stk->current_stock > 0 ? ($stk->current_stock . ' ' . $stk->unit) : 'Habis',
+                'current_stock' => $stk->current_stock,
+                'unit' => $stk->unit,
+                'image' => $img,
+            ];
         }
 
-        // Available Categories
-        $categories = Sale::getCategories();
-        
-        // Master Products list with realistic data & image placeholders matching screenshot
-        $products = [
-            ['id' => 1, 'name' => 'Tahu Campur Lamongan', 'category' => 'Makanan Utama', 'price' => 20000, 'discount' => 10, 'discount_amount' => 2000, 'badge' => '30%', 'image' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 2, 'name' => 'Sop Konro Banyuwangi', 'category' => 'Makanan Utama', 'price' => 25000, 'discount' => 0, 'discount_amount' => 0, 'badge' => 'Rp', 'image' => 'https://images.unsplash.com/photo-1547592180-85f173990554?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 3, 'name' => 'Es Teh Manis', 'category' => 'MINUMAN PANAS', 'price' => 5000, 'discount' => 0, 'discount_amount' => 0, 'badge' => '%', 'image' => 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 4, 'name' => 'Ayam Krispi Istimewa', 'category' => 'Makanan Utama', 'price' => 20000, 'discount' => 0, 'discount_amount' => 0, 'badge' => 'Rp', 'image' => 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 5, 'name' => 'Rendang Daging', 'category' => 'Makanan Utama', 'price' => 20000, 'discount' => 0, 'discount_amount' => 0, 'badge' => '30%', 'image' => 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 6, 'name' => 'Gurami Pedas Sayur Kuning', 'category' => 'Makanan Utama', 'price' => 40000, 'discount' => 0, 'discount_amount' => 0, 'badge' => '%', 'image' => 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 7, 'name' => 'Es Siwalan Pandan Hijau', 'category' => 'MINUMAN PANAS', 'price' => 5000, 'discount' => 0, 'discount_amount' => 0, 'badge' => '%', 'image' => 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 8, 'name' => 'Ronde Hangat', 'category' => 'MINUMAN PANAS', 'price' => 7500, 'discount' => 0, 'discount_amount' => 0, 'badge' => 'Rp', 'image' => 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 9, 'name' => 'Americano', 'category' => 'Espresso Based', 'price' => 18000, 'discount' => 0, 'discount_amount' => 0, 'badge' => '%', 'image' => 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 10, 'name' => 'Calathea Coffee Specialty', 'category' => 'Coffee Specialty', 'price' => 25000, 'discount' => 0, 'discount_amount' => 0, 'badge' => '30%', 'image' => 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 11, 'name' => 'Cappucino Hot', 'category' => 'Espresso Based', 'price' => 22000, 'discount' => 0, 'discount_amount' => 0, 'badge' => 'Rp', 'image' => 'https://images.unsplash.com/photo-1534778101976-62847782c213?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 12, 'name' => 'Caramel Coffee', 'category' => 'Flavored Coffee', 'price' => 25000, 'discount' => 0, 'discount_amount' => 0, 'badge' => '%', 'image' => 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 13, 'name' => 'Matcha Latte', 'category' => 'Non-Coffee & Tea', 'price' => 22000, 'discount' => 0, 'discount_amount' => 0, 'badge' => 'Rp', 'image' => 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 14, 'name' => 'Es Teler Spesial', 'category' => 'MINUMAN PANAS', 'price' => 20000, 'discount' => 10, 'discount_amount' => 2000, 'badge' => '30%', 'image' => 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 15, 'name' => 'Nasi Putih', 'category' => 'Makanan Utama', 'price' => 3500, 'discount' => 0, 'discount_amount' => 0, 'badge' => 'Rp', 'image' => 'https://images.unsplash.com/photo-1516684732162-798a0062be99?w=300&auto=format&fit=crop&q=80'],
-        ];
-
-        // Bottom drawer quick items (Ice creams / Desserts as in Majoo UI bottom bar)
-        $quickItems = [
-            ['id' => 101, 'name' => 'Strawberry Ice Cream', 'category' => 'Dessert', 'price' => 25000, 'badge' => '30%', 'image' => 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 102, 'name' => 'Coffee Cookie Ice Cream', 'category' => 'Dessert', 'price' => 25000, 'badge' => '30%', 'image' => 'https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 103, 'name' => '3 Color Ice Cream', 'category' => 'Dessert', 'price' => 25000, 'badge' => '30%', 'image' => 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300&auto=format&fit=crop&q=80'],
-            ['id' => 104, 'name' => 'Black Cherry Chocolate', 'category' => 'Dessert', 'price' => 25000, 'badge' => '30%', 'image' => 'https://images.unsplash.com/photo-1580915411954-282cb1b0d780?w=300&auto=format&fit=crop&q=80'],
-        ];
+        // Quick Items (Dessert/Ice Cream/Top items from Stock)
+        $quickItems = array_slice($products, 0, 4);
 
         // Generate Order ID & today stats
         $todayCount = Sale::whereDate('date', Carbon::today())->count();

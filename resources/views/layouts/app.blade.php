@@ -145,7 +145,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-3 shadow-sm mb-4">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center fw-bold text-white fs-4 me-3" href="{{ route('sales.index') }}">
-                <img src="{{ asset('images/logocala.jpeg') }}?v={{ time() }}" alt="Logo Calathea Coffee" class="me-2 rounded-circle border border-success" style="height: 40px; width: 40px; object-fit: cover;">
+                <img src="{{ asset('images/logocala.jpeg') }}?v={{ time() }}" alt="Logo Calathea Coffee" class="me-2 rounded-3 bg-white p-1 shadow-sm" style="height: 44px; width: auto; max-width: 90px; object-fit: contain;">
                 <span>Calathea Coffee</span>
             </a>
 

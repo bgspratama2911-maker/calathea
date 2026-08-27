@@ -47,15 +47,16 @@
         }
 
         .login-header .icon-box {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
+            max-width: 140px;
+            height: 65px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 15px auto;
-            border: 2px solid #22c55e;
-            overflow: hidden;
+            background: #ffffff;
+            padding: 4px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
         }
 
         .btn-navy {
@@ -93,7 +94,7 @@
     <!-- Header -->
     <div class="login-header">
         <div class="icon-box">
-            <img src="{{ asset('images/logocala.jpeg') }}?v={{ time() }}" alt="Logo Calathea Coffee" style="width: 100%; height: 100%; object-fit: cover;">
+            <img src="{{ asset('images/logocala.jpeg') }}?v={{ time() }}" alt="Logo Calathea Coffee" style="width: 100%; height: 100%; object-fit: contain;">
         </div>
         <h4 class="fw-bold mb-1">Rekap Pengeluaran Calathea</h4>
         <p class="text-light opacity-75 small mb-0">Silakan login untuk mengelola pengeluaran</p>

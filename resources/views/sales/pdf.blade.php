@@ -204,7 +204,7 @@
                         <tr>
                             @if($logoBase64)
                             <td style="padding-right: 10px; vertical-align: middle;">
-                                <img src="{{ $logoBase64 }}" style="width: 38px; height: 38px; border-radius: 50%; border: 1px solid #22c55e;">
+                                <img src="{{ $logoBase64 }}" style="height: 38px; width: auto; max-width: 80px; border-radius: 4px; background: #ffffff; padding: 2px;">
                             </td>
                             @endif
                             <td style="vertical-align: middle;">

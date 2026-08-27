@@ -620,7 +620,7 @@
     <!-- 1. Top Majoo Header Bar -->
     <div class="majoo-header">
         <div class="majoo-brand">
-            <img src="{{ asset('images/logocala.jpeg') }}" class="rounded-circle border border-white" style="width: 36px; height: 36px; object-fit: cover;" alt="Logo">
+            <img src="{{ asset('images/logocala.jpeg') }}?v={{ time() }}" class="rounded-2 bg-white p-1" style="height: 38px; width: auto; max-width: 85px; object-fit: contain;" alt="Logo">
             <div>
                 <div class="fw-bold text-white fs-6 lh-1">Calathea Coffee & Resto</div>
                 <div class="small opacity-75" style="font-size: 0.72rem;">

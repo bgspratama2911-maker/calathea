@@ -620,7 +620,7 @@
     <!-- 1. Top Majoo Header Bar -->
     <div class="majoo-header">
         <div class="majoo-brand">
-            <div class="majoo-avatar">4+</div>
+            <img src="{{ asset('images/logocala.jpeg') }}" class="rounded-circle border border-white" style="width: 36px; height: 36px; object-fit: cover;" alt="Logo">
             <div>
                 <div class="fw-bold text-white fs-6 lh-1">Calathea Coffee & Resto</div>
                 <div class="small opacity-75" style="font-size: 0.72rem;">
@@ -1327,9 +1327,9 @@ $(document).ready(function() {
         const receiptHtml = `
             <div class="receipt-container">
                 <div class="receipt-header">
+                    <img src="{{ asset('images/logocala.jpeg') }}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-bottom: 5px;" alt="Logo">
                     <h5>CALATHEA COFFEE</h5>
-                    <div>Jl. Calathea Raya No. 88, Malang</div>
-                    <div>Telp: (0341) 555-8899</div>
+                    <div>Jl. Dr. Satrio No. 235 Jakarta Selatan</div>
                 </div>
 
                 <div class="receipt-divider"></div>
